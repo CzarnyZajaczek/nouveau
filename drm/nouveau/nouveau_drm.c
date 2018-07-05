@@ -63,6 +63,7 @@
 #include "nouveau_usif.h"
 #include "nouveau_connector.h"
 #include "nouveau_platform.h"
+#include "nouveau_svm.h"
 
 MODULE_PARM_DESC(config, "option string to pass to driver core");
 static char *nouveau_config;
@@ -581,6 +582,7 @@ nouveau_drm_load(struct drm_device *dev, unsigned long flags)
 
 	nouveau_debugfs_init(drm);
 	nouveau_hwmon_init(dev);
+	nouveau_svm_init(drm);
 	nouveau_accel_init(drm);
 	nouveau_fbcon_init(dev);
 	nouveau_led_init(dev);
@@ -625,6 +627,7 @@ nouveau_drm_unload(struct drm_device *dev)
 	nouveau_led_fini(dev);
 	nouveau_fbcon_fini(dev);
 	nouveau_accel_fini(drm);
+	nouveau_svm_fini(drm);
 	nouveau_hwmon_fini(dev);
 	nouveau_debugfs_fini(drm);
 
@@ -671,6 +674,7 @@ nouveau_do_suspend(struct drm_device *dev, bool runtime)
 	struct nouveau_drm *drm = nouveau_drm(dev);
 	int ret;
 
+	nouveau_svm_suspend(drm);
 	nouveau_led_suspend(dev);
 
 	if (dev->mode_config.num_crtc) {
@@ -747,7 +751,7 @@ nouveau_do_resume(struct drm_device *dev, bool runtime)
 	}
 
 	nouveau_led_resume(dev);
-
+	nouveau_svm_resume(drm);
 	return 0;
 }
 
@@ -968,6 +972,7 @@ nouveau_ioctls[] = {
 	DRM_IOCTL_DEF_DRV(NOUVEAU_GROBJ_ALLOC, nouveau_abi16_ioctl_grobj_alloc, DRM_AUTH|DRM_RENDER_ALLOW),
 	DRM_IOCTL_DEF_DRV(NOUVEAU_NOTIFIEROBJ_ALLOC, nouveau_abi16_ioctl_notifierobj_alloc, DRM_AUTH|DRM_RENDER_ALLOW),
 	DRM_IOCTL_DEF_DRV(NOUVEAU_GPUOBJ_FREE, nouveau_abi16_ioctl_gpuobj_free, DRM_AUTH|DRM_RENDER_ALLOW),
+	DRM_IOCTL_DEF_DRV(NOUVEAU_SVM_INIT, nouveau_svmm_init, DRM_AUTH|DRM_RENDER_ALLOW),
 	DRM_IOCTL_DEF_DRV(NOUVEAU_GEM_NEW, nouveau_gem_ioctl_new, DRM_AUTH|DRM_RENDER_ALLOW),
 	DRM_IOCTL_DEF_DRV(NOUVEAU_GEM_PUSHBUF, nouveau_gem_ioctl_pushbuf, DRM_AUTH|DRM_RENDER_ALLOW),
 	DRM_IOCTL_DEF_DRV(NOUVEAU_GEM_CPU_PREP, nouveau_gem_ioctl_cpu_prep, DRM_AUTH|DRM_RENDER_ALLOW),
